@@ -1,3 +1,6 @@
+## v1.3.3 (2026-07-28)
+
+- nolibc printf: format floats as double, not long double (@samoht #177)
 - Update openlibm to v0.8.7 (was a844d58 - which is just before 0.5.6)
   See the full changes at https://github.com/JuliaMath/openlibm/compare/a844d58...v0.8.7
   (@shym #179)
