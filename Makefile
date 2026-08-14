@@ -98,7 +98,7 @@ ocaml:
 # create an ocaml-src subdirectory
 	test ! -d $@
 	cp -r "$$(ocamlfind query ocaml-src)" $@
-	VERSION="$$(head -n1 ocaml/VERSION)" ; \
+	VERSION="$$(head -n1 ocaml/VERSION | cut -d '.' -f 1-2)" ; \
 	if test -d "patches/$$VERSION" ; then \
 	  opatch -v -C $@ "patches/$$VERSION"/*; \
 	fi
@@ -130,7 +130,7 @@ _build/solo5.conf: gen_solo5_conf.sh $(OCAML_IS_BUILT)
 	PREFIX="$(MAKECONF_PREFIX)" SYSROOT="$(MAKECONF_SYSROOT)" ./gen_solo5_conf.sh > $@
 
 _build/empty-META: | _build
-	touch $@
+	echo 'type_of_threads = "posix"' > $@
 
 # INSTALL
 PACKAGES := $(basename $(wildcard *.opam))
