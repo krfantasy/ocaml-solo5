@@ -1,3 +1,9 @@
+## v1.3.4 (2026-08-14)
+
+- drop 5.4.1 support (@hannesm #186)
+- use major.minor for patches, support 5.5 series (@hannesm #186, fixes #157 by @kit-ty-kate)
+- add 'type_of_threads = "posix"' to META files to fix ocamlfind exception (@hannesm #186, reported #185 by @palainp)
+
 ## v1.3.3 (2026-07-28)
 
 - nolibc printf: format floats as double, not long double (@samoht #177)
