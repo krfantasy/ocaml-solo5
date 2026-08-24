@@ -9,5 +9,7 @@ typedef int off_t;
 typedef int ssize_t;
 typedef int mode_t;
 typedef int useconds_t;
+typedef unsigned int uid_t;
+typedef unsigned int gid_t;
 
 #endif

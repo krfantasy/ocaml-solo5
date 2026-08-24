@@ -2,6 +2,11 @@
 #define _SYS_TIME_H
 
 typedef long time_t;
+#ifndef _NOLIBC_CLOCK_T
+#define _NOLIBC_CLOCK_T
+typedef int clock_t; /* keep in sync with sys/times.h */
+#endif
+#define CLOCKS_PER_SEC 1000000L
 typedef long suseconds_t;
 struct timeval {
     time_t tv_sec;

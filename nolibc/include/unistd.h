@@ -8,6 +8,10 @@ int close(int);
 char *getcwd(char *, size_t);
 pid_t getpid(void);
 pid_t getppid(void);
+uid_t getuid(void);
+uid_t geteuid(void);
+gid_t getgid(void);
+gid_t getegid(void);
 int isatty(int);
 off_t lseek(int, off_t, int); /* SEEK_ */
 ssize_t read(int, void *, size_t);

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -73,6 +74,11 @@ STUB_ABORT(close);
 STUB_ABORT(getcwd);
 STUB_WARN_ONCE(pid_t, getpid, 2);
 STUB_WARN_ONCE(pid_t, getppid, 1);
+STUB_IGNORE(uid_t, getuid, 0);
+STUB_IGNORE(uid_t, geteuid, 0);
+STUB_IGNORE(gid_t, getgid, 0);
+STUB_IGNORE(gid_t, getegid, 0);
+STUB_IGNORE(clock_t, clock, 0);
 STUB_IGNORE(int, isatty, 0);
 STUB_IGNORE(off_t, lseek, -1);
 STUB_ABORT(read);

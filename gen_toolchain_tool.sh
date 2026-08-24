@@ -18,7 +18,11 @@ gen_cc() {
 
   case "$ARCH" in
     aarch64)
-      EXTRALIBS="-lgcc"
+      # libgcc does not exist for a bare-metal clang target (e.g. macOS hosts);
+      # only add it when the Solo5 toolchain is GCC-based.
+      if ! "$SOLO5_TOOLCHAIN-cc" -dM -E - </dev/null | grep -Eq '^#define __clang__ 1$'
+      then EXTRALIBS="-lgcc"
+      fi
       ;;
   esac
 

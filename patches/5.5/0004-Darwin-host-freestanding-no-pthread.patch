@@ -1,0 +1,34 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -2704,8 +2704,14 @@
+     # tests can rely on the assumption that pthread is enabled.
+     CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+     LIBS="$LIBS $PTHREAD_LIBS"],
+-    [AC_MSG_ERROR(m4_normalize([POSIX threads are required but not supported on
+-      this platform]))])])
++    [AS_CASE([$(uname -s)],
++      [Darwin],
++        [dnl Freestanding Solo5 target: pthreads are neither available nor
++         dnl required; tolerate an AX_PTHREAD failure on macOS hosts instead
++         dnl of erroring out (PTHREAD_CFLAGS/PTHREAD_LIBS stay empty).
++         ax_pthread_ok=yes],
++      [AC_MSG_ERROR(m4_normalize([POSIX threads are required but not supported on
++        this platform]))])])]
+ 
+ ## pthread_getaffinity_np, args differ from GNU and BSD
+ AC_MSG_CHECKING([arguments for pthread_getaffinity_np])
+--- a/configure
++++ b/configure
+@@ -23365,7 +23365,11 @@
+         :
+ else
+         ax_pthread_ok=no
+-        as_fn_error $? "POSIX threads are required but not supported on this platform" "$LINENO" 5
++        if uname -s | grep -q '^Darwin$'; then
++          ax_pthread_ok=yes
++        else
++          as_fn_error $? "POSIX threads are required but not supported on this platform" "$LINENO" 5
++        fi
+ fi
+ ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
