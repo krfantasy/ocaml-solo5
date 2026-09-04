@@ -7,3 +7,5 @@ ocaml/
 _build/
 /ocaml-src.tar.gz
 /*.install
+# Local review scratch, intentionally untracked (see macos-port-fixes history)
+TODO.org

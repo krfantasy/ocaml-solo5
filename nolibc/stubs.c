@@ -50,16 +50,19 @@ STUB_ABORT(sscanf); /* Used only for parsing OCAMLRUNPARAM, never called */
 /*
  * The following stubs are not required by the OCaml runtime, but are
  * needed to build the freestanding version of GMP used by Mirage.
+ * Return types match the prototypes in <stdio.h>; the values returned
+ * report failure ("no bytes transferred", "no such stream") rather than
+ * a bogus success.
  */
-STUB_WARN_ONCE(int, fread, 0);
+STUB_WARN_ONCE(size_t, fread, 0);
 STUB_WARN_ONCE(int, getc, EOF);
 STUB_WARN_ONCE(int, ungetc, EOF);
-STUB_WARN_ONCE(int, fwrite, 0);
+STUB_WARN_ONCE(size_t, fwrite, 0);
 STUB_WARN_ONCE(int, fputc, EOF);
 STUB_WARN_ONCE(int, fputs, EOF);
 STUB_WARN_ONCE(int, putc, EOF);
 STUB_WARN_ONCE(int, ferror, 1);
-STUB_WARN_ONCE(int, fopen, 1);
+STUB_WARN_ONCE(FILE *, fopen, NULL);
 STUB_WARN_ONCE(int, fclose, 1);
 
 /* stdlib.h */
@@ -82,7 +85,7 @@ STUB_IGNORE(clock_t, clock, 0);
 STUB_IGNORE(int, isatty, 0);
 STUB_IGNORE(off_t, lseek, -1);
 STUB_ABORT(read);
-STUB_IGNORE(int, readlink, -1);
+STUB_IGNORE(ssize_t, readlink, -1);
 STUB_ABORT(unlink);
 STUB_ABORT(rmdir);
 STUB_ABORT(ftruncate);
@@ -91,7 +94,7 @@ STUB_ABORT(execvp);
 
 /* dirent.h */
 STUB_WARN_ONCE(int, closedir, -1);
-STUB_WARN_ONCE(void *, opendir, NULL);
+STUB_WARN_ONCE(DIR *, opendir, NULL);
 STUB_WARN_ONCE(struct dirent *, readdir, NULL);
 
 /* fcntl.h */

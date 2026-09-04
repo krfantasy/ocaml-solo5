@@ -17,6 +17,11 @@ LIBS := openlibm/libopenlibm.a nolibc/libnolibc.a
 # CFLAGS used to build the nolibc and openlibm libraries
 LIB_CFLAGS=-I$(TOP)/nolibc/include -include _solo5/overrides.h
 
+# AR for building the freestanding libraries; set by configure.sh on macOS,
+# where LLVM's ar is required (the host BSD ar produces archives unusable for
+# the target). Empty elsewhere: the sub-makes then use their default 'ar'.
+MAKE_AR := $(if $(MAKECONF_AR),"AR=$(MAKECONF_AR)")
+
 # NOLIBC
 # Use a phony target indirection, so that nolibc/Makefile is always checked to
 # see whether the library should be rebuilt while avoiding useless rebuild if
@@ -28,6 +33,7 @@ nolibc/libnolibc.a: phony-nolibc
 phony-nolibc:
 	$(MAKE) -C nolibc libnolibc.a \
 	    "CC=$(MAKECONF_TOOLCHAIN)-cc" \
+	    $(MAKE_AR) \
 	    "FREESTANDING_CFLAGS=$(NOLIBC_CFLAGS)"
 
 # OPENLIBM
@@ -38,6 +44,7 @@ openlibm/libopenlibm.a: phony-openlibm
 phony-openlibm:
 	$(MAKE) -C openlibm libopenlibm.a \
 	     "CC=$(MAKECONF_TOOLCHAIN)-cc" \
+	     $(MAKE_AR) \
 	     "CPPFLAGS=$(LIB_CFLAGS)"
 
 # TOOLCHAIN

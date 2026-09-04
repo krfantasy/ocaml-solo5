@@ -25,6 +25,10 @@ int vsnprintf(char *, size_t, const char *, va_list);
  * needed to build the freestanding version of GMP used by Mirage.
  */
 #define EOF (-1)
+/* SEEK_ constants are also defined in <unistd.h>; keep the two in sync. */
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 extern FILE *stdin;
 size_t fread(void *, size_t, size_t, FILE *);
 int getc(FILE *);

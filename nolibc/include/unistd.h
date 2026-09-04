@@ -13,7 +13,7 @@ uid_t geteuid(void);
 gid_t getgid(void);
 gid_t getegid(void);
 int isatty(int);
-off_t lseek(int, off_t, int); /* SEEK_ */
+off_t lseek(int, off_t, int);
 ssize_t read(int, void *, size_t);
 ssize_t write(int, const void *, size_t);
 ssize_t readlink(const char *, char *, size_t);
@@ -27,6 +27,8 @@ int execvp(const char *, char *const []);
 
 #define _SC_PAGESIZE 1
 #define _SC_PAGE_SIZE _SC_PAGESIZE
+#define SEEK_SET 0
+#define SEEK_CUR 1
 #define SEEK_END 2
 
 #endif
