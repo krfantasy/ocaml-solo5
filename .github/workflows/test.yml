@@ -18,81 +18,81 @@ jobs:
       ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'arm64' }}
     runs-on: ${{ matrix.runner }}
     steps:
-    - uses: actions/checkout@v7
-    - uses: ocaml/setup-ocaml@v3
-      with:
-        ocaml-compiler: ${{ matrix.ocaml-compiler }}
-        opam-local-packages: |
-          *.opam
-          !ocaml-solo5-cross-aarch64.opam
-    - name: Install ocaml-solo5 and dune
-      run: |
-        opam install conf-libseccomp dune fmt \
-          ocaml-solo5 --verbose-on=ocaml-solo5
-    - name: Show the toolchain configuration
-      run: |
-        set -x
-        opam exec -- ocamlfind -toolchain solo5 opt -config
-        opam exec -- ocamlfind -toolchain solo5 printconf
-        opam exec -- ocamlfind -toolchain solo5 list
-    - name: Compile examples with hvt
-      run: MODE=hvt opam exec -- dune build --root example --display short
-    - name: Run the hello example with hvt
-      run: |
-        set -x
-        MODE=hvt opam exec -- dune describe location --root example \
-          --context solo5 --no-print-directory ./hello.exe |& tee hello.path
-        sudo setfacl -m u:${USER}:rw /dev/kvm
-        opam exec -- solo5-hvt -- "example/$(cat hello.path)"
-      if: matrix.runner == 'ubuntu-latest'
-    - name: Compile examples with spt
-      run: MODE=spt opam exec -- dune build --root example --display short
-    - name: Run examples with spt
-      run: MODE=spt opam exec -- dune runtest --root example _build/solo5
-    - name: Compile examples with virtio
-      run: MODE=virtio opam exec -- dune build --root example --display short
-      if: matrix.runner == 'ubuntu-latest'
-    - name: Compile examples with muen
-      run: MODE=muen opam exec -- dune build --root example --display short
-      if: matrix.runner == 'ubuntu-latest'
-    - name: Compile examples with xen
-      run: MODE=xen opam exec -- dune build --root example --display short
-      if: matrix.runner == 'ubuntu-latest'
+      - uses: actions/checkout@v7
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          opam-local-packages: |
+            *.opam
+            !ocaml-solo5-cross-aarch64.opam
+      - name: Install ocaml-solo5 and dune
+        run: |
+          opam install conf-libseccomp dune fmt \
+            ocaml-solo5 --verbose-on=ocaml-solo5
+      - name: Show the toolchain configuration
+        run: |
+          set -x
+          opam exec -- ocamlfind -toolchain solo5 opt -config
+          opam exec -- ocamlfind -toolchain solo5 printconf
+          opam exec -- ocamlfind -toolchain solo5 list
+      - name: Compile examples with hvt
+        run: MODE=hvt opam exec -- dune build --root example --display short
+      - name: Run the hello example with hvt
+        run: |
+          set -x
+          MODE=hvt opam exec -- dune describe location --root example \
+            --context solo5 --no-print-directory ./hello.exe |& tee hello.path
+          sudo setfacl -m u:${USER}:rw /dev/kvm
+          opam exec -- solo5-hvt -- "example/$(cat hello.path)"
+        if: matrix.runner == 'ubuntu-latest'
+      - name: Compile examples with spt
+        run: MODE=spt opam exec -- dune build --root example --display short
+      - name: Run examples with spt
+        run: MODE=spt opam exec -- dune runtest --root example _build/solo5
+      - name: Compile examples with virtio
+        run: MODE=virtio opam exec -- dune build --root example --display short
+        if: matrix.runner == 'ubuntu-latest'
+      - name: Compile examples with muen
+        run: MODE=muen opam exec -- dune build --root example --display short
+        if: matrix.runner == 'ubuntu-latest'
+      - name: Compile examples with xen
+        run: MODE=xen opam exec -- dune build --root example --display short
+        if: matrix.runner == 'ubuntu-latest'
   test-macos:
     name: OCaml 5.5.0 arm64 (macOS)
     runs-on: macos-15
     steps:
-    - uses: actions/checkout@v7
-    - name: Install LLVM
-      # The Solo5 toolchain is Clang-based on macOS: the host BSD tools cannot
-      # build for the ELF Solo5 target. configure.sh locates LLVM's tools via
-      # PATH or `brew --prefix llvm` (see README.md, section "macOS").
-      run: brew install llvm
-    - uses: ocaml/setup-ocaml@v3
-      with:
-        ocaml-compiler: 5.5.0
-        # Pin the local packages so the macOS smoke build below configures
-        # the same opam project; ocaml-solo5 itself is intentionally NOT
-        # installed here — the job exercises ./configure.sh + make directly
-        # rather than the opam build path above.
-        opam-local-packages: |
-          *.opam
-          !ocaml-solo5-cross-aarch64.opam
-    - name: Install build dependencies
-      # solo5 provides the aarch64-solo5-none-static toolchain wrappers used
-      # by configure.sh; it is available on macOS arm64 (its libseccomp
-      # dependency is Linux-only).
-      run: opam install solo5 ocamlfind ocaml-src opatch
-    - name: Configure
-      # Core options matching the build in ocaml-solo5.opam for macOS arm64
-      # (the opam-only --disable-flat-float-array / --enable-flambda
-      # variants are not exercised here).
-      run: |
-        ./configure.sh \
-          --target=aarch64-solo5-none-static \
-          --ocaml-configure-option=--enable-imprecise-c99-float-ops \
-          --ocaml-configure-option=--disable-function-sections
-    - name: Build
-      run: make -j3
-    - name: Run the nolibc header tests
-      run: make test
+      - uses: actions/checkout@v7
+      - name: Install LLVM
+        # The Solo5 toolchain is Clang-based on macOS: the host BSD tools cannot
+        # build for the ELF Solo5 target. configure.sh locates LLVM's tools via
+        # PATH or `brew --prefix llvm` (see README.md, section "macOS").
+        run: brew install llvm
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5.5.0
+          # Pin the local packages so the macOS smoke build below configures
+          # the same opam project; ocaml-solo5 itself is intentionally NOT
+          # installed here — the job exercises ./configure.sh + make directly
+          # rather than the opam build path above.
+          opam-local-packages: |
+            *.opam
+            !ocaml-solo5-cross-aarch64.opam
+      - name: Install build dependencies
+        # solo5 provides the aarch64-solo5-none-static toolchain wrappers used
+        # by configure.sh; it is available on macOS arm64 (its libseccomp
+        # dependency is Linux-only).
+        run: opam install solo5 ocamlfind ocaml-src opatch
+      - name: Configure
+        # Core options matching the build in ocaml-solo5.opam for macOS arm64
+        # (the opam-only --disable-flat-float-array / --enable-flambda
+        # variants are not exercised here).
+        run: |
+          ./configure.sh \
+            --target=aarch64-solo5-none-static \
+            --ocaml-configure-option=--enable-imprecise-c99-float-ops \
+            --ocaml-configure-option=--disable-function-sections
+      - name: Build
+        run: make -j3
+      - name: Run the nolibc header tests
+        run: make test

@@ -19,30 +19,31 @@ gen_cc() {
   # Detect the compiler flavor once — the same -dM -E probe Solo5 uses to
   # detect clang — and cache the result: both the -lgcc decision below and
   # the clang driver flag fixups further down depend on it.
-  if "$SOLO5_TOOLCHAIN-cc" -dM -E - </dev/null | grep -Eq '^#define __clang__ 1$'
-  then IS_CLANG=yes
-  else IS_CLANG=no
+  if "$SOLO5_TOOLCHAIN-cc" -dM -E - </dev/null | grep -Eq '^#define __clang__ 1$'; then
+    IS_CLANG=yes
+  else
+    IS_CLANG=no
   fi
 
   case "$ARCH" in
-    aarch64)
-      # Only GCC-based aarch64 toolchains get -lgcc: the aarch64 build can
-      # reference libgcc helper routines, while the x86_64 build has never
-      # needed them. libgcc does not exist for a bare-metal clang target
-      # (e.g. macOS hosts), so there is nothing to link on clang.
-      #
-      # Clang builds therefore intentionally link no compiler runtime at
-      # all (no compiler-rt builtins either). That is fine for this
-      # codebase: nolibc provides the intrinsics it needs, and if a builtin
-      # is ever missing (e.g. __udivti3) the failure is a loud undefined
-      # symbol at unikernel link time, not a silent miscompile. Linking
-      # -lclang_rt.builtins-aarch64 instead was considered and rejected:
-      # its availability and naming vary across Xcode/LLVM installs, so it
-      # cannot be added unconditionally.
-      if [ "$IS_CLANG" = no ]; then
-        EXTRALIBS="-lgcc"
-      fi
-      ;;
+  aarch64)
+    # Only GCC-based aarch64 toolchains get -lgcc: the aarch64 build can
+    # reference libgcc helper routines, while the x86_64 build has never
+    # needed them. libgcc does not exist for a bare-metal clang target
+    # (e.g. macOS hosts), so there is nothing to link on clang.
+    #
+    # Clang builds therefore intentionally link no compiler runtime at
+    # all (no compiler-rt builtins either). That is fine for this
+    # codebase: nolibc provides the intrinsics it needs, and if a builtin
+    # is ever missing (e.g. __udivti3) the failure is a loud undefined
+    # symbol at unikernel link time, not a silent miscompile. Linking
+    # -lclang_rt.builtins-aarch64 instead was considered and rejected:
+    # its availability and naming vary across Xcode/LLVM installs, so it
+    # cannot be added unconditionally.
+    if [ "$IS_CLANG" = no ]; then
+      EXTRALIBS="-lgcc"
+    fi
+    ;;
   esac
 
   # Add the -Wno-unused-command-line-argument option for clang, as we always
@@ -55,7 +56,7 @@ gen_cc() {
     CFLAGS="-Wno-unused-command-line-argument -D_REENTRANT $CFLAGS"
   fi
 
-  cat << EOF
+  cat <<EOF
 #!/bin/sh
 
 # Just like the Solo5 cc, we assume that we are linking, unless we find an
@@ -98,70 +99,70 @@ EOF
 gen_tool() {
   TOOL="$1"
   case "$TOOL" in
-    ar)
-      TARGET_TOOL="$TARGET_AR"
-      ;;
-    as)
-      TARGET_TOOL="$TARGET_AS"
-      ;;
-    ld)
-      TARGET_TOOL="$TARGET_LD"
-      ;;
-    nm)
-      TARGET_TOOL="$TARGET_NM"
-      ;;
-    objcopy)
-      TARGET_TOOL="$TARGET_OBJCOPY"
-      ;;
-    objdump)
-      TARGET_TOOL="$TARGET_OBJDUMP"
-      ;;
-    ranlib)
-      TARGET_TOOL="$TARGET_RANLIB"
-      ;;
-    readelf)
-      TARGET_TOOL="$TARGET_READELF"
-      ;;
-    strip)
-      TARGET_TOOL="$TARGET_STRIP"
-      ;;
+  ar)
+    TARGET_TOOL="$TARGET_AR"
+    ;;
+  as)
+    TARGET_TOOL="$TARGET_AS"
+    ;;
+  ld)
+    TARGET_TOOL="$TARGET_LD"
+    ;;
+  nm)
+    TARGET_TOOL="$TARGET_NM"
+    ;;
+  objcopy)
+    TARGET_TOOL="$TARGET_OBJCOPY"
+    ;;
+  objdump)
+    TARGET_TOOL="$TARGET_OBJDUMP"
+    ;;
+  ranlib)
+    TARGET_TOOL="$TARGET_RANLIB"
+    ;;
+  readelf)
+    TARGET_TOOL="$TARGET_READELF"
+    ;;
+  strip)
+    TARGET_TOOL="$TARGET_STRIP"
+    ;;
   esac
-  if test "$TARGET_TOOL" ; then
+  if test "$TARGET_TOOL"; then
     TOOL="$TARGET_TOOL"
-  elif command -v -- "$SOLO5_TOOLCHAIN-$TOOL" > /dev/null; then
+  elif command -v -- "$SOLO5_TOOLCHAIN-$TOOL" >/dev/null; then
     TOOL="$SOLO5_TOOLCHAIN-$TOOL"
   else
     case "$TOOL" in
-      as)
-        TOOL="$SOLO5_TOOLCHAIN-cc -c"
-        ;;
-      *)
-        if command -v -- "$OTHERTOOLPREFIX$TOOL" > /dev/null; then
-          TOOL="$OTHERTOOLPREFIX$TOOL"
-        elif [ "$(uname -s)" = "Darwin" ]; then
-          # On macOS silently falling back to the host tools (e.g. BSD ar)
-          # would produce archives unusable for the (ELF) Solo5 target: fail
-          # loudly instead. On other hosts the bare tool is a sensible
-          # fallback, so keep the previous behaviour.
-          echo "gen_toolchain_tool.sh: ERROR: cannot find '${OTHERTOOLPREFIX}${TOOL}' (tool '$TOOL' for target '$ARCH-solo5')." 1>&2
-          echo "gen_toolchain_tool.sh: HINT: install LLVM, e.g. 'brew install llvm', then re-run configure.sh (or pass a valid --othertoolprefix)." 1>&2
-          exit 1
-        fi
-        ;;
+    as)
+      TOOL="$SOLO5_TOOLCHAIN-cc -c"
+      ;;
+    *)
+      if command -v -- "$OTHERTOOLPREFIX$TOOL" >/dev/null; then
+        TOOL="$OTHERTOOLPREFIX$TOOL"
+      elif [ "$(uname -s)" = "Darwin" ]; then
+        # On macOS silently falling back to the host tools (e.g. BSD ar)
+        # would produce archives unusable for the (ELF) Solo5 target: fail
+        # loudly instead. On other hosts the bare tool is a sensible
+        # fallback, so keep the previous behaviour.
+        echo "gen_toolchain_tool.sh: ERROR: cannot find '${OTHERTOOLPREFIX}${TOOL}' (tool '$TOOL' for target '$ARCH-solo5')." 1>&2
+        echo "gen_toolchain_tool.sh: HINT: install LLVM, e.g. 'brew install llvm', then re-run configure.sh (or pass a valid --othertoolprefix)." 1>&2
+        exit 1
+      fi
+      ;;
     esac
   fi
 
-  cat << EOF
+  cat <<EOF
 #!/bin/sh
 exec $TOOL "\$@"
 EOF
 }
 
 case "$1" in
-  cc|gcc)
-    gen_cc
-    ;;
-  *)
-    gen_tool "$1"
-    ;;
+cc | gcc)
+  gen_cc
+  ;;
+*)
+  gen_tool "$1"
+  ;;
 esac
