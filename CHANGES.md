@@ -1,3 +1,28 @@
+## Unreleased
+
+- add macOS (arm64) host support: the package is now available on
+  `os = "macos" & arch = "arm64"` and builds the Solo5 toolchain with
+  LLVM/Clang (see the new "macOS" section in README)
+- configure.sh: on macOS, locate the LLVM tools (`llvm-ar`, etc.) by
+  probing `PATH` first and then `brew --prefix llvm`, instead of
+  hardcoding Homebrew's default prefix; an explicit `--othertoolprefix`
+  is honoured, and missing tools now fail the build loudly instead of
+  silently falling back to the (ELF-incompatible) host tools
+- toolchain: define `_REENTRANT` when the toolchain compiler is Clang
+  and drop the Darwin-specific pthread patch (0004), whose `uname` gate
+  only proxied the real cause
+- nolibc: the exported surface changed: `clock()` and `time()` are now
+  declared, `SEEK_SET` and `SEEK_CUR` are defined alongside `SEEK_END`,
+  `uid_t`/`gid_t` and the `get*id()` declarations were added, `clock_t`
+  is widened to `long` with `CLK_TCK`/`CLOCKS_PER_SEC` defined, `times()`
+  reports monotonic time so `Sys.time` returns uptime seconds instead of
+  0.0, and stub return types now match their header prototypes so failed
+  calls return proper error values (e.g. `fopen`/`opendir` return
+  `NULL`, `readlink` returns -1) instead of bogus success
+- README: note that `ocaml-solo5-cross-aarch64` is only installable on
+  Debian-based x86_64 Linux (its `solo5-cross-aarch64` dependency is
+  unavailable elsewhere, including macOS)
+
 ## v1.3.4 (2026-08-14)
 
 - drop 5.4.1 support (@hannesm #186)

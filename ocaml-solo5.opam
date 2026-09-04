@@ -11,12 +11,23 @@ build: [
    "--prefix=%{prefix}%"
    "--target=x86_64-solo5-none-static" { arch = "x86_64" }
    "--target=aarch64-solo5-none-static" { arch = "arm64" }
-   "--othertoolprefix=/opt/homebrew/opt/llvm/bin/llvm-" { os = "macos" }
-   "--ocaml-configure-option=--enable-imprecise-c99-float-ops"
+   # macOS only, added with the macOS clang toolchain support (see the
+   # comment below): configure consults this only if the C99 float-op checks
+   # fail, turning that error into emulated float ops. They pass today.
+   "--ocaml-configure-option=--enable-imprecise-c99-float-ops" { os = "macos" }
+   # macOS only: the toolchain wrapper there drives clang + ld.lld rather
+   # than a GCC/binutils toolchain. With the clang vendor that OCaml's
+   # configure detects, it would enable function sections here
+   # (-ffunction-sections for C, -function-sections for native OCaml). OCaml
+   # treats function sections as unsupported on Darwin and its configure
+   # refuses them for *-apple-darwin* targets, but that guard matches the
+   # target triple (canonicalized to aarch64-unknown-none here, not the
+   # darwin host), so it never fires and the flag must be passed explicitly.
    "--ocaml-configure-option=--disable-function-sections" { os = "macos" }
+   "--ocaml-configure-option=--disable-flat-float-array" {ocaml-option-no-flat-float-array:installed}
    "--ocaml-configure-option=--enable-flambda" {ocaml-option-flambda:installed}
   ]
-  [make "-j%{jobs}%" "AR=/opt/homebrew/opt/llvm/bin/llvm-ar" { os = "macos" }]
+  [make "-j%{jobs}%"]
   [make "%{name}%.install"]
 ]
 install: [

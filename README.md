@@ -10,6 +10,37 @@ Solo5 base layer:
 
 [Supported compiler versions]: #supported-compiler-versions
 
+## macOS
+
+macOS on arm64 (Apple Silicon) is supported. The build requires an
+LLVM installation (the Solo5 toolchain is Clang-based and the host BSD tools
+cannot build for the ELF Solo5 target):
+
+    brew install llvm
+
+as well as Solo5, e.g. via OPAM (`opam install solo5`).
+
+`configure.sh` locates the LLVM tools (`llvm-ar`, etc.) first on `PATH`, then
+by asking `brew --prefix llvm` (this works with both the default and custom
+Homebrew prefixes). Non-Homebrew installs (MacPorts, Nix, manual) work as
+long as `llvm-ar` is on `PATH`; note that versioned binary names (e.g.
+`llvm-ar-mp-19`) are not probed. If it cannot find them, it stops with an
+error and a `brew install llvm` hint. The location can also be given explicitly, e.g.
+`./configure.sh --othertoolprefix=/opt/homebrew/opt/llvm/bin/llvm-`; on
+macOS the resolved `ar` must report an LLVM version — a prefix pointing
+at the host BSD tools is rejected loudly. If the
+tools then go missing before the build, the toolchain wrapper generation
+fails with an error rather than silently using the host tools.
+
+Note that the separate `ocaml-solo5-cross-aarch64` package is not an
+alternative on macOS: it is only installable on Debian-based x86_64 Linux,
+because it hard-depends on `solo5-cross-aarch64`, whose OPAM availability is
+`arch != "arm64" & os = "linux" & os-family = "debian"` (this excludes macOS
+and even arm64 Linux hosts). The restriction comes from that dependency
+rather than from the cross package's own `available:` field. To build for the
+aarch64 Solo5 target on macOS, use the main `ocaml-solo5` package described
+above, which selects the `aarch64-solo5-none-static` target on Apple Silicon.
+
 ## License and contributions
 
 All original contributions to this package are licensed under the standard MIT
@@ -39,6 +70,7 @@ In `$prefix/bin`:
 and OpenLibm support libraries.
 
 In `$sysroot/bin`:
+
 - `ocamlopt.{opt,byte}`: a native OCaml compiler configured for the chosen
   target.
 - Some other standard tools such as the `ocaml` interpreter and
@@ -46,6 +78,7 @@ In `$sysroot/bin`:
   target. Please note that the bytecode runtime is not supported.
 
 In `$sysroot/lib/ocaml`:
+
 - `libasmrun.a`: the OCaml native code runtime for the Solo5 target.
 - The standard library.
 - In `caml/`: Header files for the OCaml runtime.
@@ -72,6 +105,7 @@ bindings results in a _dummy_ executable.
 
 To build with the Solo5 compiler toolchain, it has to be selected using
 ocamlfind or dune:
+
 - ocamlfind: `ocamlfind -toolchain solo5 ...`
 - dune: `dune build -x solo5`, or add the toolchain in a build context
   in the dune workspace file.

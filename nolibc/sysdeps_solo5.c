@@ -66,10 +66,25 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
     return 0;
 }
 
+/*
+ * A Solo5 unikernel is a single process that exists for the lifetime of the
+ * unikernel, so there is no meaningful way to split CPU time between user and
+ * system (and there are no children): report monotonic time since unikernel
+ * start as tms_utime and zero the remaining fields. All values, including the
+ * return value, use the clock_t scale of CLK_TCK ticks per second
+ * (nanoseconds, see <sys/times.h>); clock_t is a 64-bit long, so no
+ * truncation of solo5_clock_monotonic() occurs.
+ */
 clock_t times(struct tms *buf)
 {
-    memset(buf, 0, sizeof(*buf));
-    return (clock_t)solo5_clock_monotonic();
+    clock_t now = (clock_t)solo5_clock_monotonic();
+    if (buf != NULL) {
+        buf->tms_utime = now;
+        buf->tms_stime = 0;
+        buf->tms_cutime = 0;
+        buf->tms_cstime = 0;
+    }
+    return now;
 }
 
 static uintptr_t sbrk_start;
