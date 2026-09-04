@@ -67,7 +67,10 @@ jobs:
         # The Solo5 toolchain is Clang-based on macOS: the host BSD tools cannot
         # build for the ELF Solo5 target. configure.sh locates LLVM's tools via
         # PATH or `brew --prefix llvm` (see README.md, section "macOS").
-        run: brew install llvm
+        # Solo5's own configure.sh additionally requires LLVM LLD (ld.lld)
+        # for the ELF target on Darwin; Homebrew ships it as the separate
+        # `lld` formula, not as part of `llvm`.
+        run: brew install llvm lld
       - uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: 5.5.0
@@ -80,19 +83,24 @@ jobs:
             !ocaml-solo5-cross-aarch64.opam
       - name: Install build dependencies
         # solo5 provides the aarch64-solo5-none-static toolchain wrappers used
-        # by configure.sh; it is available on macOS arm64 (its libseccomp
-        # dependency is Linux-only).
-        run: opam install solo5 ocamlfind ocaml-src opatch
+        # by configure.sh. macOS support exists only in the krfantasy/solo5
+        # fork, so pin it first: the released solo5 in opam-repository is
+        # Linux/BSD-only and the solver rejects it on macOS with
+        # "unmet availability conditions" (its libseccomp dependency is
+        # Linux-only, hence the Linux-only available: field upstream).
+        run: |
+          opam pin add --no-action solo5 git+https://github.com/krfantasy/solo5.git
+          opam install solo5 ocamlfind ocaml-src opatch
       - name: Configure
         # Core options matching the build in ocaml-solo5.opam for macOS arm64
         # (the opam-only --disable-flat-float-array / --enable-flambda
         # variants are not exercised here).
         run: |
-          ./configure.sh \
+          opam exec -- ./configure.sh \
             --target=aarch64-solo5-none-static \
             --ocaml-configure-option=--enable-imprecise-c99-float-ops \
             --ocaml-configure-option=--disable-function-sections
       - name: Build
-        run: make -j3
+        run: opam exec -- make -j3
       - name: Run the nolibc header tests
-        run: make test
+        run: opam exec -- make test
